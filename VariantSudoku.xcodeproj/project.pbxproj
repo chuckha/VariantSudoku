@@ -11,6 +11,8 @@
 		E2A798EA2B66DC9300806E7D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A798E92B66DC9300806E7D /* ContentView.swift */; };
 		E2A798EC2B66DC9500806E7D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2A798EB2B66DC9500806E7D /* Assets.xcassets */; };
 		E2A798EF2B66DC9500806E7D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2A798EE2B66DC9500806E7D /* Preview Assets.xcassets */; };
+		E2A798F62B66DCAA00806E7D /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A798F52B66DCAA00806E7D /* Game.swift */; };
+		E2A798F82B66DF4900806E7D /* RealGames.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A798F72B66DF4900806E7D /* RealGames.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +21,8 @@
 		E2A798E92B66DC9300806E7D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E2A798EB2B66DC9500806E7D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E2A798EE2B66DC9500806E7D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		E2A798F52B66DCAA00806E7D /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		E2A798F72B66DF4900806E7D /* RealGames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealGames.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +57,8 @@
 			children = (
 				E2A798E72B66DC9300806E7D /* VariantSudokuApp.swift */,
 				E2A798E92B66DC9300806E7D /* ContentView.swift */,
+				E2A798F52B66DCAA00806E7D /* Game.swift */,
+				E2A798F72B66DF4900806E7D /* RealGames.swift */,
 				E2A798EB2B66DC9500806E7D /* Assets.xcassets */,
 				E2A798ED2B66DC9500806E7D /* Preview Content */,
 			);
@@ -138,7 +144,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2A798EA2B66DC9300806E7D /* ContentView.swift in Sources */,
+				E2A798F62B66DCAA00806E7D /* Game.swift in Sources */,
 				E2A798E82B66DC9300806E7D /* VariantSudokuApp.swift in Sources */,
+				E2A798F82B66DF4900806E7D /* RealGames.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
