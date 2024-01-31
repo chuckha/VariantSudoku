@@ -30,6 +30,14 @@ class Game: ObservableObject {
 	func getKillerCages() -> [KillerCageConstraint] {
 		constraintGenerators.filter { $0.tags.contains(.KillerCage) }.map { $0 as! KillerCageConstraint }
 	}
+
+	func handleInput(input: Int) {
+		print("\(input)")
+	}
+
+	func handleDelete() {
+		print("Delete!")
+	}
 }
 
 class Board: ObservableObject {
@@ -41,6 +49,11 @@ class Board: ObservableObject {
 		self.cells = cells
 		self.height = height
 		self.width = width
+	}
+
+	func regionForCell(p: Point) -> Set<Point> {
+		let c = cells[p]!
+		return Set(cells.filter { $0.value.region == c.region }.map { $0.key })
 	}
 }
 
@@ -260,6 +273,33 @@ func selectionBorder(_ p: Point, group: Set<Point>) -> (BorderSet, BorderDirecti
 		return (.OneSide, .Right)
 	}
 	return (.NoSides, .None)
+}
+
+struct RegionBorder: Identifiable {
+	let id: Edge
+	var width: CGFloat
+}
+
+func regionBorders(p: Point, region: Set<Point>, width: CGFloat = 4) -> [RegionBorder] {
+	var out: [RegionBorder] = [
+		RegionBorder(id: .top, width: width),
+		RegionBorder(id: .trailing, width: width),
+		RegionBorder(id: .bottom, width: width),
+		RegionBorder(id: .leading, width: width),
+	]
+	if region.contains(p.up()) {
+		out[0].width = 0
+	}
+	if region.contains(p.right()) {
+		out[1].width = 0
+	}
+	if region.contains(p.down()) {
+		out[2].width = 0
+	}
+	if region.contains(p.left()) {
+		out[3].width = 0
+	}
+	return out
 }
 
 protocol ConstraintGenerator: Hashable {
