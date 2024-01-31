@@ -44,6 +44,14 @@ struct ContentView: View {
 	}
 }
 
+struct VView: View {
+	var p: Point
+	var region: Set<Point> = []
+	var body: some View {
+		Rectangle()
+	}
+}
+
 struct RegionView: View {
 	var p: Point
 	var region: Set<Point> = []

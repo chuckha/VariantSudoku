@@ -14,6 +14,8 @@ enum Tag {
 	case Column
 	case Region
 	case KillerCage
+	case X
+	case V
 }
 
 class Game: ObservableObject {
@@ -60,6 +62,16 @@ class Board: ObservableObject {
 struct Point: Hashable {
 	let row: Int
 	let col: Int
+
+	init(row: Int, col: Int) {
+		self.row = row
+		self.col = col
+	}
+
+	init(_ row: Int, _ col: Int) {
+		self.row = row
+		self.col = col
+	}
 
 	func up() -> Point {
 		Point(row: row - 1, col: col)
@@ -159,9 +171,55 @@ class Sum: Constraint {
 	// the whole region is returned if the sum fails at any point
 	func valid(board: [Point: Cell]) -> Set<Point> {
 		let realSum = group.reduce(into: 0) { partialResult, p in
-			partialResult += board[p]!.value ?? 0
+			partialResult += board[p]?.value ?? 0
 		}
 		if sum == realSum {
+			return []
+		}
+		return group
+	}
+}
+
+class V: Constraint {
+	var name: String
+	var group: Set<Point>
+
+	init(name: String, group: Set<Point>) {
+		if group.count != 2 {
+			print("V constraint requires exactly two points")
+		}
+		self.name = name
+		self.group = group
+	}
+
+	func valid(board: [Point: Cell]) -> Set<Point> {
+		let groupSum = group.reduce(into: 0) { partialResult, p in
+			partialResult += board[p]?.value ?? 0
+		}
+		if groupSum == 5 {
+			return []
+		}
+		return group
+	}
+}
+
+class X: Constraint {
+	var name: String
+	var group: Set<Point>
+
+	init(name: String, group: Set<Point>) {
+		if group.count != 2 {
+			print("X constraint requires exactly two points")
+		}
+		self.name = name
+		self.group = group
+	}
+
+	func valid(board: [Point: Cell]) -> Set<Point> {
+		let groupSum = group.reduce(into: 0) { partialResult, p in
+			partialResult += board[p]?.value ?? 0
+		}
+		if groupSum == 10 {
 			return []
 		}
 		return group
@@ -305,6 +363,27 @@ func regionBorders(p: Point, region: Set<Point>, width: CGFloat = 4) -> [RegionB
 protocol ConstraintGenerator: Hashable {
 	var tags: Set<Tag> { get }
 	func rawConstraints() -> [Constraint]
+}
+
+struct VConstraint: ConstraintGenerator {
+	var id: String
+	var group: Set<Point>
+	var tags: Set<Tag> = [.V, .Sum]
+
+	func rawConstraints() -> [Constraint] {
+		[V(name: "V Constraint (\(id))", group: group)]
+	}
+}
+
+struct XConstraint: ConstraintGenerator {
+	var id: String
+	var sum: Int
+	var group: Set<Point>
+	var tags: Set<Tag> = [.X, .Sum]
+
+	func rawConstraints() -> [Constraint] {
+		[X(name: "X Constraint (\(id))", group: group)]
+	}
 }
 
 struct KillerCageConstraint: ConstraintGenerator {
