@@ -8,6 +8,6 @@ This is not very good swift. If you're learning swift I highly recommend reading
 
 - [x] killer cages
 - [x] XV
-- [] thermometer
-- [] zipper lines
-- [] german whispers
+- [ ] thermometer
+- [ ] zipper lines
+- [ ] german whispers
