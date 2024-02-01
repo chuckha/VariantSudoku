@@ -16,6 +16,7 @@ enum Tag {
 	case KillerCage
 	case X
 	case V
+	case Digits
 }
 
 class Game: ObservableObject {
@@ -31,6 +32,14 @@ class Game: ObservableObject {
 
 	func getKillerCages() -> [KillerCageConstraint] {
 		constraintGenerators.filter { $0.tags.contains(.KillerCage) }.map { $0 as! KillerCageConstraint }
+	}
+
+	func getVs() -> [VConstraint] {
+		constraintGenerators.filter { $0.tags.contains(.V) }.map { $0 as! VConstraint }
+	}
+
+	func getXs() -> [XConstraint] {
+		constraintGenerators.filter { $0.tags.contains(.X) }.map { $0 as! XConstraint }
 	}
 
 	func handleInput(input: Int) {
@@ -118,6 +127,10 @@ class Cell: ObservableObject {
 		self.value = value
 		self.given = given
 	}
+
+	func displayValue() -> String {
+		given?.description ?? value?.description ?? ""
+	}
 }
 
 protocol Constraint {
@@ -125,6 +138,22 @@ protocol Constraint {
 	var group: Set<Point> { get set }
 
 	func valid(board: [Point: Cell]) -> Set<Point>
+}
+
+class ValidDigit: Constraint {
+	var name: String
+	var group: Set<Point> = []
+	let validDigits: Set<Int>
+
+	init(name: String, validDigits: Set<Int>) {
+		self.name = name
+		self.validDigits = validDigits
+		group = []
+	}
+
+	func valid(board: [Point: Cell]) -> Set<Point> {
+		Set(board.filter { $0.value.value != nil && validDigits.contains($0.value.value!) }.map { $0.key })
+	}
 }
 
 class Unique: Constraint {
@@ -367,22 +396,21 @@ protocol ConstraintGenerator: Hashable {
 
 struct VConstraint: ConstraintGenerator {
 	var id: String
-	var group: Set<Point>
+	var group: [Point]
 	var tags: Set<Tag> = [.V, .Sum]
 
 	func rawConstraints() -> [Constraint] {
-		[V(name: "V Constraint (\(id))", group: group)]
+		[V(name: "V Constraint (\(id))", group: Set(group))]
 	}
 }
 
 struct XConstraint: ConstraintGenerator {
 	var id: String
-	var sum: Int
-	var group: Set<Point>
+	var group: [Point]
 	var tags: Set<Tag> = [.X, .Sum]
 
 	func rawConstraints() -> [Constraint] {
-		[X(name: "X Constraint (\(id))", group: group)]
+		[X(name: "X Constraint (\(id))", group: Set(group))]
 	}
 }
 
@@ -435,5 +463,14 @@ struct UniqueRegions: ConstraintGenerator {
 				)
 			)
 		}
+	}
+}
+
+struct ValidDigits: ConstraintGenerator {
+	var validDigits: Set<Int>
+	let tags: Set<Tag> = [.Digits]
+
+	func rawConstraints() -> [Constraint] {
+		[ValidDigit(name: "Valid digits in puzzle", validDigits: validDigits)]
 	}
 }

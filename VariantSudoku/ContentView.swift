@@ -8,14 +8,7 @@
 import SwiftUI
 
 // - [x] region boundaries
-/*
- given the cell and the region set
- if the cell neighbor is outside of the grid, do a double thick line
- if the cell neighbor is inside the grid but outside the region, do a half thick line
- if the cell neighbor is inside the region, don't do a line
- so given the cell return the edge and the thickness of the line, yes?
- */
-// - [] xv
+// - [x] xv
 // - [] actual gameplay lol
 
 struct ContentView: View {
@@ -41,14 +34,6 @@ struct ContentView: View {
 			//        })
 			.environmentObject(grid)
 		}
-	}
-}
-
-struct VView: View {
-	var p: Point
-	var region: Set<Point> = []
-	var body: some View {
-		Rectangle()
 	}
 }
 
@@ -92,6 +77,30 @@ struct RegionBorderShape: Shape {
 	}
 }
 
+struct VXView: View {
+	var letter: String
+	var region: [Point]
+	var cw: CGFloat
+	var ch: CGFloat
+
+	var body: some View {
+		Text(letter)
+			.background(.white)
+			.position(
+				CGPoint(x: calcX(cw: cw, colA: region[0].col, colB: region[1].col),
+				        y: calcY(ch: ch, rowA: region[0].row, rowB: region[1].row))
+			)
+	}
+}
+
+func calcX(cw: CGFloat, colA: Int, colB: Int) -> CGFloat {
+	(CGFloat(colA) * cw + (cw / 2.0) + CGFloat(colB) * cw + (cw / 2.0)) / 2.0
+}
+
+func calcY(ch: CGFloat, rowA: Int, rowB: Int) -> CGFloat {
+	(CGFloat(rowA) * ch + (ch / 2.0) + CGFloat(rowB) * ch + (ch / 2.0)) / 2.0
+}
+
 struct GridView: View {
 	@EnvironmentObject var grid: Game
 	@State private var selected: Set<Point> = []
@@ -114,6 +123,19 @@ struct GridView: View {
 					}
 				}
 			}
+			.overlay(
+				ForEach(grid.getVs(), id: \.self) { v in
+					// bit of a hack here; assumes the width will always be the whole screen.
+					VXView(letter: "V", region: v.group, cw: geo.size.width / CGFloat(grid.board.width), ch: geo.size.width / CGFloat(grid.board.height))
+				}
+			)
+			.overlay(
+				ForEach(grid.getXs(), id: \.self) { v in
+					// bit of a hack here; assumes the width will always be the whole screen.
+					VXView(letter: "X", region: v.group, cw: geo.size.width / CGFloat(grid.board.width), ch: geo.size.width / CGFloat(grid.board.height))
+				}
+			)
+
 			.contentShape(Rectangle())
 			.gesture(
 				DragGesture(minimumDistance: 0)
@@ -125,7 +147,6 @@ struct GridView: View {
 						let cellSize = geo.size.width / CGFloat(grid.board.width)
 						let row = Int(value.location.y / cellSize)
 						let col = Int(value.location.x / cellSize)
-						print(row, col)
 						if row >= 0, row < grid.board.height, col >= 0, col < grid.board.width {
 							selected.insert(Point(row: row, col: col))
 						}
@@ -206,6 +227,10 @@ struct CellView: View {
 			.stroke(Color.primary, lineWidth: 1)
 			.aspectRatio(1, contentMode: .fit)
 			.foregroundColor(.clear)
+			.overlay(
+				Text(cell.displayValue())
+					.font(.system(size: 60))
+			)
 	}
 }
 
