@@ -125,7 +125,8 @@ struct GridView: View {
 			}
 			.overlay(
 				ForEach(grid.getVs(), id: \.self) { v in
-					// bit of a hack here; assumes the width will always be the whole screen.
+					// TODO: Fix this hack :(
+					// bit of a hack here; assumes the width will always be the whole screen. This breaks on the ipad
 					VXView(letter: "V", region: v.group, cw: geo.size.width / CGFloat(grid.board.width), ch: geo.size.width / CGFloat(grid.board.height))
 				}
 			)
