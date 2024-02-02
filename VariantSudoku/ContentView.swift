@@ -103,7 +103,6 @@ func calcY(ch: CGFloat, rowA: Int, rowB: Int) -> CGFloat {
 
 struct GridView: View {
 	@EnvironmentObject var grid: Game
-	@State private var selected: Set<Point> = []
 
 	var body: some View {
 		GeometryReader { geo in
@@ -117,7 +116,7 @@ struct GridView: View {
 								ForEach(grid.getKillerCages(), id: \.self) { cg in
 									KillerCageCellView(p: Point(row: row, col: col), constraint: cg)
 								}
-								SelectedCell(p: Point(row: row, col: col), selected: $selected)
+								SelectedCell(p: Point(row: row, col: col), selected: $grid.selected)
 							}
 						}
 					}
@@ -142,14 +141,14 @@ struct GridView: View {
 				DragGesture(minimumDistance: 0)
 					.onChanged { value in
 						if value.startLocation == value.location {
-							selected = []
+							grid.selected = []
 						}
 
 						let cellSize = geo.size.width / CGFloat(grid.board.width)
 						let row = Int(value.location.y / cellSize)
 						let col = Int(value.location.x / cellSize)
 						if row >= 0, row < grid.board.height, col >= 0, col < grid.board.width {
-							selected.insert(Point(row: row, col: col))
+							grid.selected.insert(Point(row: row, col: col))
 						}
 					}
 			)

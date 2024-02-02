@@ -23,6 +23,7 @@ class Game: ObservableObject {
 	@Published var board: Board
 	var constraintGenerators: [any ConstraintGenerator]
 	private let constraints: [Constraint]
+	@Published var selected: Set<Point> = []
 
 	init(board: Board, cgs: [any ConstraintGenerator]) {
 		self.board = board
