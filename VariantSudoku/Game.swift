@@ -14,9 +14,9 @@ enum Tag {
 	case Column
 	case Region
 	case KillerCage
-	case X
-	case V
 	case Digits
+	case SumPair
+	case XV
 }
 
 class Game: ObservableObject {
@@ -35,16 +35,12 @@ class Game: ObservableObject {
 		constraintGenerators.filter { $0.tags.contains(.KillerCage) }.map { $0 as! KillerCageConstraint }
 	}
 
-	func getVs() -> [VConstraint] {
-		constraintGenerators.filter { $0.tags.contains(.V) }.map { $0 as! VConstraint }
-	}
-
-	func getXs() -> [XConstraint] {
-		constraintGenerators.filter { $0.tags.contains(.X) }.map { $0 as! XConstraint }
+	func getXVs() -> [XVConstraint] {
+		constraintGenerators.filter { $0.tags.contains(.XV) }.map { $0 as! XVConstraint }
 	}
 
 	func handleInput(input: Int) {
-		print("\(input)")
+		board.setCellValues(points: selected, value: input)
 	}
 
 	func handleDelete() {
@@ -63,9 +59,27 @@ class Board: ObservableObject {
 		self.width = width
 	}
 
+	@available(*, deprecated, message: "use regionForCell(at:) instead")
 	func regionForCell(p: Point) -> Set<Point> {
 		let c = cells[p]!
 		return Set(cells.filter { $0.value.region == c.region }.map { $0.key })
+	}
+
+	func regionForCell(at: Point) -> Set<Point> {
+		let c = cells[at]!
+		return Set(cells.filter { $0.value.region == c.region }.map { $0.key })
+	}
+
+	func setCellValues(points: Set<Point>, value: Int) {
+		cells.filter { points.contains($0.key) }.forEach { $0.value.setValue(x: value) }
+	}
+
+	func getCell(at: Point) -> Cell {
+		if let c = cells[at] {
+			return c
+		}
+		print("this is really bad")
+		return Cell(point: Point(row: -1, col: -1), region: -1)
 	}
 }
 
@@ -131,6 +145,10 @@ class Cell: ObservableObject {
 
 	func displayValue() -> String {
 		given?.description ?? value?.description ?? ""
+	}
+
+	func setValue(x: Int) {
+		value = x
 	}
 }
 
@@ -204,52 +222,6 @@ class Sum: Constraint {
 			partialResult += board[p]?.value ?? 0
 		}
 		if sum == realSum {
-			return []
-		}
-		return group
-	}
-}
-
-class V: Constraint {
-	var name: String
-	var group: Set<Point>
-
-	init(name: String, group: Set<Point>) {
-		if group.count != 2 {
-			print("V constraint requires exactly two points")
-		}
-		self.name = name
-		self.group = group
-	}
-
-	func valid(board: [Point: Cell]) -> Set<Point> {
-		let groupSum = group.reduce(into: 0) { partialResult, p in
-			partialResult += board[p]?.value ?? 0
-		}
-		if groupSum == 5 {
-			return []
-		}
-		return group
-	}
-}
-
-class X: Constraint {
-	var name: String
-	var group: Set<Point>
-
-	init(name: String, group: Set<Point>) {
-		if group.count != 2 {
-			print("X constraint requires exactly two points")
-		}
-		self.name = name
-		self.group = group
-	}
-
-	func valid(board: [Point: Cell]) -> Set<Point> {
-		let groupSum = group.reduce(into: 0) { partialResult, p in
-			partialResult += board[p]?.value ?? 0
-		}
-		if groupSum == 10 {
 			return []
 		}
 		return group
@@ -395,23 +367,37 @@ protocol ConstraintGenerator: Hashable {
 	func rawConstraints() -> [Constraint]
 }
 
-struct VConstraint: ConstraintGenerator {
-	var id: String
-	var group: [Point]
-	var tags: Set<Tag> = [.V, .Sum]
-
-	func rawConstraints() -> [Constraint] {
-		[V(name: "V Constraint (\(id))", group: Set(group))]
-	}
+enum XVType {
+	case X
+	case V
 }
 
-struct XConstraint: ConstraintGenerator {
+struct XVConstraint: ConstraintGenerator {
 	var id: String
 	var group: [Point]
-	var tags: Set<Tag> = [.X, .Sum]
+	var tags: Set<Tag> = [.SumPair, .XV]
+	var type: XVType
 
 	func rawConstraints() -> [Constraint] {
-		[X(name: "X Constraint (\(id))", group: Set(group))]
+		[Sum(name: "\(name()) Constraint \(id)", group: Set(group), sum: sumTo())]
+	}
+
+	func sumTo() -> Int {
+		switch type {
+		case .X: 10
+		case .V: 5
+		}
+	}
+
+	func name() -> String {
+		switch type {
+		case .V: return "V"
+		case .X: return "X"
+		}
+	}
+
+	func leftRight() -> Bool {
+		return group[0].row == group[1].row
 	}
 }
 

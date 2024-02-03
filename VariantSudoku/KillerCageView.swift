@@ -7,23 +7,17 @@
 
 import SwiftUI
 
-struct KillerCageCellView: View {
+struct KillerCageCellViewV2: View {
 	var p: Point
 	var constraint: KillerCageConstraint
 	var body: some View {
-		Rectangle()
-			.aspectRatio(1, contentMode: .fit)
-			.foregroundColor(.clear)
-			.overlay(
+		CellSizeView().overlay(
+			ZStack {
 				KillerCageBorder(width: 3, border: selectionBorder(p, group: constraint.group))
 					.stroke(style: StrokeStyle(dash: [6]))
 					.rotationEffect(borderDirToDegrees(bd: selectionBorder(p, group: constraint.group)))
-			)
-			.overlay(
 				KillerCageCorner(width: 5, corners: corners(p, group: constraint.group))
 					.stroke(style: StrokeStyle(dash: [3]))
-			)
-			.overlay(
 				HStack {
 					VStack {
 						Text(topLeftCornerCell(p, group: constraint.group) ? "\(constraint.sumTo)" : "")
@@ -33,7 +27,8 @@ struct KillerCageCellView: View {
 					}
 					Spacer()
 				}
-			)
+			}
+		)
 	}
 }
 

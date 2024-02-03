@@ -9,7 +9,12 @@ import SwiftUI
 
 // - [x] region boundaries
 // - [x] xv
-// - [] actual gameplay lol
+// - [x] actual gameplay lol
+// - [ ] given digits are black, user entered are blue
+// - [ ] corner marks
+// - [ ] middle marks
+// - [ ] mode selection
+// - [ ] constraint failure highlights
 
 struct ContentView: View {
 //	@StateObject private var grid: Game = killerCageIntro()
@@ -18,8 +23,7 @@ struct ContentView: View {
 	var body: some View {
 		GeometryReader { geo in
 			VStack {
-				GridView()
-
+				GameView()
 				HStack {
 					//                OptionsView()
 					//                    .padding([.trailing])
@@ -37,14 +41,29 @@ struct ContentView: View {
 	}
 }
 
-struct RegionView: View {
-	var p: Point
-	var region: Set<Point> = []
-
+struct CellSizeView: View {
 	var body: some View {
 		Rectangle()
 			.aspectRatio(1, contentMode: .fit)
 			.foregroundColor(.clear)
+	}
+}
+
+struct DividerView: View {
+	var body: some View {
+		Rectangle()
+			.stroke(Color.primary, lineWidth: 1)
+			.aspectRatio(1, contentMode: .fit)
+			.foregroundColor(.clear)
+	}
+}
+
+struct RegionViewV2: View {
+	var p: Point
+	var region: Set<Point> = []
+
+	var body: some View {
+		CellSizeView()
 			.overlay(
 				ForEach(regionBorders(p: p, region: region)) { regionBorder in
 					RegionBorderShape(edge: regionBorder.id)
@@ -77,78 +96,126 @@ struct RegionBorderShape: Shape {
 	}
 }
 
-struct VXView: View {
-	var letter: String
-	var region: [Point]
-	var cw: CGFloat
-	var ch: CGFloat
+struct DisplayView: View {
+	@ObservedObject var cell: Cell
+
+	init(cell: Cell?) {
+		self.cell = cell ?? Cell(point: Point(-1, -1), region: -1)
+	}
 
 	var body: some View {
-		Text(letter)
-			.background(.white)
-			.position(
-				CGPoint(x: calcX(cw: cw, colA: region[0].col, colB: region[1].col),
-				        y: calcY(ch: ch, rowA: region[0].row, rowB: region[1].row))
-			)
+		Text(cell.displayValue())
+			.font(.system(size: 50.0))
 	}
 }
 
-func calcX(cw: CGFloat, colA: Int, colB: Int) -> CGFloat {
-	(CGFloat(colA) * cw + (cw / 2.0) + CGFloat(colB) * cw + (cw / 2.0)) / 2.0
-}
-
-func calcY(ch: CGFloat, rowA: Int, rowB: Int) -> CGFloat {
-	(CGFloat(rowA) * ch + (ch / 2.0) + CGFloat(rowB) * ch + (ch / 2.0)) / 2.0
-}
-
-struct GridView: View {
-	@EnvironmentObject var grid: Game
-
+struct XVView: View {
+	var xv: XVConstraint
 	var body: some View {
 		GeometryReader { geo in
-			VStack(spacing: 0) {
-				ForEach(0 ..< grid.board.height, id: \.self) { row in
-					HStack(spacing: 0) {
-						ForEach(0 ..< grid.board.width, id: \.self) { col in
-							ZStack {
-								RegionView(p: Point(row: row, col: col), region: grid.board.regionForCell(p: Point(row: row, col: col)))
-								CellView(cell: Binding($grid.board.cells[Point(row: row, col: col)], Cell(point: Point(row: 0, col: 0), region: 0)))
-								ForEach(grid.getKillerCages(), id: \.self) { cg in
-									KillerCageCellView(p: Point(row: row, col: col), constraint: cg)
-								}
-								SelectedCell(p: Point(row: row, col: col), selected: $grid.selected)
-							}
+			Text(xv.name())
+				.padding(2)
+				.background(.white)
+				.position(
+					xv.leftRight() ? CGPoint(x: geo.size.width, y: geo.size.height / 2) : CGPoint(x: geo.size.width / 2, y: geo.size.height))
+		}
+	}
+}
+
+struct BoardView: View {
+	@ObservedObject var board: Board
+
+	var body: some View {
+		VStack(spacing: 0) {
+			ForEach(0 ..< board.height, id: \.self) { row in
+				HStack(spacing: 0) {
+					ForEach(0 ..< board.width, id: \.self) { col in
+						ZStack {
+							DividerView()
+							DisplayView(cell: board.cells[Point(row, col)])
+							RegionViewV2(p: Point(row, col), region: board.regionForCell(at: Point(row, col)))
 						}
 					}
 				}
 			}
-			.overlay(
-				ForEach(grid.getVs(), id: \.self) { v in
-					// TODO: Fix this hack :(
-					// bit of a hack here; assumes the width will always be the whole screen. This breaks on the ipad
-					VXView(letter: "V", region: v.group, cw: geo.size.width / CGFloat(grid.board.width), ch: geo.size.width / CGFloat(grid.board.height))
-				}
-			)
-			.overlay(
-				ForEach(grid.getXs(), id: \.self) { v in
-					// bit of a hack here; assumes the width will always be the whole screen.
-					VXView(letter: "X", region: v.group, cw: geo.size.width / CGFloat(grid.board.width), ch: geo.size.width / CGFloat(grid.board.height))
-				}
-			)
+		}
+	}
+}
 
+struct SelectedCellsView: View {
+	var height: Int
+	var width: Int
+	@Binding var selected: Set<Point>
+
+	var body: some View {
+		VStack(spacing: 0) {
+			ForEach(0 ..< height, id: \.self) { row in
+				HStack(spacing: 0) {
+					ForEach(0 ..< width, id: \.self) { col in
+						SelectedCell(p: Point(row, col), selected: $selected)
+					}
+				}
+			}
+		}
+	}
+}
+
+struct ConstraintsView: View {
+	var height: Int
+	var width: Int
+	var killerCages: [KillerCageConstraint]
+	var xvs: [XVConstraint]
+
+	var body: some View {
+		VStack(spacing: 0) {
+			ForEach(0 ..< height, id: \.self) { row in
+				HStack(spacing: 0) {
+					ForEach(0 ..< width, id: \.self) { col in
+						ZStack {
+							ForEach(killerCages, id: \.self) { cg in
+								KillerCageCellViewV2(p: Point(row: row, col: col), constraint: cg)
+							}
+							CellSizeView().overlay(
+								ForEach(xvs.filter { $0.group[0] == Point(row, col) }, id: \.self) { xv in
+									XVView(xv: xv)
+								}
+							)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+struct GameView: View {
+	@EnvironmentObject var game: Game
+
+	var body: some View {
+		GeometryReader { geo in
+			ZStack {
+				BoardView(board: game.board)
+				ConstraintsView(height: game.board.height,
+				                width: game.board.width,
+				                killerCages: game.getKillerCages(),
+				                xvs: game.getXVs())
+				SelectedCellsView(height: game.board.height,
+				                  width: game.board.width,
+				                  selected: $game.selected)
+			}
 			.contentShape(Rectangle())
 			.gesture(
 				DragGesture(minimumDistance: 0)
 					.onChanged { value in
 						if value.startLocation == value.location {
-							grid.selected = []
+							game.selected = []
 						}
 
-						let cellSize = geo.size.width / CGFloat(grid.board.width)
+						let cellSize = geo.size.width / CGFloat(game.board.width)
 						let row = Int(value.location.y / cellSize)
 						let col = Int(value.location.x / cellSize)
-						if row >= 0, row < grid.board.height, col >= 0, col < grid.board.width {
-							grid.selected.insert(Point(row: row, col: col))
+						if row >= 0, row < game.board.height, col >= 0, col < game.board.width {
+							game.selected.insert(Point(row: row, col: col))
 						}
 					}
 			)
@@ -202,47 +269,20 @@ struct InputButton: View {
 	}
 }
 
-func borderDirToDegrees(bd: (BorderSet, BorderDirection)) -> Angle {
-	switch bd.1 {
-	case .None, .Down:
-		return Angle(degrees: 0)
-	case .Left:
-		return Angle(degrees: 90)
-	case .Up:
-		return Angle(degrees: 180)
-	case .Right:
-		return Angle(degrees: 270)
-	case .Vertical:
-		return Angle(degrees: 0)
-	case .Horizontal:
-		return Angle(degrees: 0)
-	}
+func borderDirToDegrees(bd: (BorderSet, BorderDirection)) -> Angle { switch bd.1 {
+case .None, .Down:
+	return Angle(degrees: 0)
+case .Left:
+	return Angle(degrees: 90)
+case .Up:
+	return Angle(degrees: 180)
+case .Right:
+	return Angle(degrees: 270)
+case .Vertical:
+	return Angle(degrees: 0)
+case .Horizontal:
+	return Angle(degrees: 0)
 }
-
-struct CellView: View {
-	@Binding var cell: Cell
-
-	var body: some View {
-		Rectangle()
-			.stroke(Color.primary, lineWidth: 1)
-			.aspectRatio(1, contentMode: .fit)
-			.foregroundColor(.clear)
-			.overlay(
-				Text(cell.displayValue())
-					.font(.system(size: 60))
-			)
-	}
-}
-
-extension Binding {
-	init(_ source: Binding<Value?>, _ defaultValue: Value) {
-		// Ensure a non-nil value in `source`.
-		if source.wrappedValue == nil {
-			source.wrappedValue = defaultValue
-		}
-		// Unsafe unwrap because *we* know it's non-nil now.
-		self.init(source)!
-	}
 }
 
 #Preview {

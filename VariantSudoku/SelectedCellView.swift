@@ -30,6 +30,24 @@ struct SelectedCell: View {
 	}
 }
 
+struct SelectedCellV2: View {
+	var p: Point
+	@Binding var selected: Set<Point>
+	var width: CGFloat = 10
+
+	var body: some View {
+		ZStack {
+			Rectangle()
+				.fill(selected.contains(p) ? Color(red: 0.3, green: 0.3, blue: 0.9, opacity: 0.01) : .clear)
+			SelectedBorder(width: width, border: selectionBorder(p, group: selected))
+				.fill(Color(red: 0.3, green: 0.3, blue: 0.9, opacity: 0.3))
+				.rotationEffect(borderDirToDegrees(bd: selectionBorder(p, group: selected)))
+			SelectedCorners(width: width, corners: corners(p, group: selected))
+				.fill(Color(red: 0.3, green: 0.3, blue: 0.9, opacity: 0.3))
+		}
+	}
+}
+
 struct SelectedCorners: Shape {
 	var width: CGFloat
 	var corners: Set<Corner>

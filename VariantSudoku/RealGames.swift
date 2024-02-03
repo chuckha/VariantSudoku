@@ -21,14 +21,14 @@ func xvIntro() -> Game {
 		UniqueRows(rows: height, cols: width),
 		UniqueColumns(rows: height, cols: width),
 		UniqueRegions(layout: layout, regions: regions),
-		VConstraint(id: "1", group: [Point(0, 0), Point(1, 0)]),
-		VConstraint(id: "2", group: [Point(1, 3), Point(2, 3)]),
-		VConstraint(id: "3", group: [Point(3, 0), Point(3, 1)]),
-		VConstraint(id: "4", group: [Point(3, 2), Point(4, 2)]),
-		VConstraint(id: "5", group: [Point(5, 0), Point(5, 1)]),
-		XConstraint(id: "1", group: [Point(2, 0), Point(3, 0)]),
-		XConstraint(id: "2", group: [Point(1, 5), Point(2, 5)]),
-		XConstraint(id: "3", group: [Point(3, 3), Point(4, 3)]),
+		XVConstraint(id: "1", group: [Point(0, 0), Point(1, 0)], type: .V),
+		XVConstraint(id: "2", group: [Point(1, 3), Point(2, 3)], type: .V),
+		XVConstraint(id: "3", group: [Point(3, 0), Point(3, 1)], type: .V),
+		XVConstraint(id: "4", group: [Point(3, 2), Point(4, 2)], type: .V),
+		XVConstraint(id: "5", group: [Point(5, 0), Point(5, 1)], type: .V),
+		XVConstraint(id: "1", group: [Point(2, 0), Point(3, 0)], type: .X),
+		XVConstraint(id: "2", group: [Point(1, 5), Point(2, 5)], type: .X),
+		XVConstraint(id: "3", group: [Point(3, 3), Point(4, 3)], type: .X),
 	]
 	let b = Board(cells: layoutToSudoku(layout), height: height, width: width)
 	return Game(board: b, cgs: constraintGenerators)
