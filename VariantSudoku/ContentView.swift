@@ -10,24 +10,26 @@ import SwiftUI
 // - [x] region boundaries
 // - [x] xv
 // - [x] actual gameplay lol
+// - [ ] little killers
 // - [ ] given digits are black, user entered are blue
 // - [ ] corner marks
 // - [ ] middle marks
 // - [ ] mode selection
-// - [ ] constraint failure highlights
+// - [x] constraint failure highlights
 
 struct ContentView: View {
-//	@StateObject private var grid: Game = killerCageIntro()
-	@StateObject private var grid: Game = xvIntro()
+	@StateObject private var grid: Game = killerCageIntro()
+//	@StateObject private var grid: Game = xvIntro()
 
 	var body: some View {
 		GeometryReader { geo in
 			VStack {
-				GameView()
+				GameView().frame(height: geo.size.height * 0.5)
+					.padding(40)
 				HStack {
 					//                OptionsView()
 					//                    .padding([.trailing])
-					InputView().frame(height: geo.size.height * 0.4)
+					InputView().frame(height: geo.size.height * 0.3)
 					//                ControlView(controlMode: $grid.inputMode)
 				}
 			}
@@ -42,10 +44,12 @@ struct ContentView: View {
 }
 
 struct CellSizeView: View {
+	var color: Color = .clear
+
 	var body: some View {
 		Rectangle()
 			.aspectRatio(1, contentMode: .fit)
-			.foregroundColor(.clear)
+			.foregroundColor(color)
 	}
 }
 
@@ -104,9 +108,19 @@ struct DisplayView: View {
 	}
 
 	var body: some View {
-		Text(cell.displayValue())
-			.font(.system(size: 50.0))
+		CellSizeView()
+			.overlay(
+				GeometryReader { geo in
+					Text(cell.displayValue())
+						.font(.system(size: fontSizeFrom(size: geo.size)))
+						.frame(maxWidth: .infinity, maxHeight: .infinity)
+				}
+			).frame(alignment: /*@START_MENU_TOKEN@*/ .center/*@END_MENU_TOKEN@*/)
 	}
+}
+
+func fontSizeFrom(size: CGSize) -> CGFloat {
+	return size.height - 10
 }
 
 struct XVView: View {
@@ -188,6 +202,36 @@ struct ConstraintsView: View {
 	}
 }
 
+let validationFailedColor = Color(red: 0.8, green: 0.2, blue: 0.2, opacity: 0.3)
+
+struct FailedConstraintCellView: View {
+	@ObservedObject var cell: Cell
+
+	init(cell: Cell?) {
+		self.cell = cell ?? Cell(point: Point(-1, -1), region: -1)
+	}
+
+	var body: some View {
+		CellSizeView(color: cell.displayValidationError() ? validationFailedColor : .clear)
+	}
+}
+
+struct FailedConstraintsView: View {
+	@ObservedObject var board: Board
+
+	var body: some View {
+		VStack(spacing: 0) {
+			ForEach(0 ..< board.height, id: \.self) { row in
+				HStack(spacing: 0) {
+					ForEach(0 ..< board.width, id: \.self) { col in
+						FailedConstraintCellView(cell: board.cells[Point(row, col)])
+					}
+				}
+			}
+		}
+	}
+}
+
 struct GameView: View {
 	@EnvironmentObject var game: Game
 
@@ -202,6 +246,7 @@ struct GameView: View {
 				SelectedCellsView(height: game.board.height,
 				                  width: game.board.width,
 				                  selected: $game.selected)
+				FailedConstraintsView(board: game.board)
 			}
 			.contentShape(Rectangle())
 			.gesture(

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E224388A2B70ACC900A67A22 /* Constraints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E22438892B70ACC900A67A22 /* Constraints.swift */; };
 		E2A798E82B66DC9300806E7D /* VariantSudokuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A798E72B66DC9300806E7D /* VariantSudokuApp.swift */; };
 		E2A798EA2B66DC9300806E7D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A798E92B66DC9300806E7D /* ContentView.swift */; };
 		E2A798EC2B66DC9500806E7D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2A798EB2B66DC9500806E7D /* Assets.xcassets */; };
@@ -18,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E22438892B70ACC900A67A22 /* Constraints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constraints.swift; sourceTree = "<group>"; };
 		E2A798E42B66DC9300806E7D /* VariantSudoku.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VariantSudoku.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2A798E72B66DC9300806E7D /* VariantSudokuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariantSudokuApp.swift; sourceTree = "<group>"; };
 		E2A798E92B66DC9300806E7D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 		E2A798E62B66DC9300806E7D /* VariantSudoku */ = {
 			isa = PBXGroup;
 			children = (
+				E22438892B70ACC900A67A22 /* Constraints.swift */,
 				E2AFE7F42B6A1133007E12D3 /* KillerCageView.swift */,
 				E2AFE7F62B6A116E007E12D3 /* SelectedCellView.swift */,
 				E2A798E72B66DC9300806E7D /* VariantSudokuApp.swift */,
@@ -150,6 +153,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2A798EA2B66DC9300806E7D /* ContentView.swift in Sources */,
+				E224388A2B70ACC900A67A22 /* Constraints.swift in Sources */,
 				E2AFE7F52B6A1133007E12D3 /* KillerCageView.swift in Sources */,
 				E2A798F62B66DCAA00806E7D /* Game.swift in Sources */,
 				E2A798E82B66DC9300806E7D /* VariantSudokuApp.swift in Sources */,

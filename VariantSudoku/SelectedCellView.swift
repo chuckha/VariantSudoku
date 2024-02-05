@@ -15,7 +15,6 @@ struct SelectedCell: View {
 
 	var body: some View {
 		Rectangle()
-			//            .stroke(Color.primary, lineWidth: 1)
 			.foregroundStyle(.clear)
 			.aspectRatio(1, contentMode: .fit)
 			.overlay(

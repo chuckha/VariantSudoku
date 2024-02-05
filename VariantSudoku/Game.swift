@@ -17,6 +17,7 @@ enum Tag {
 	case Digits
 	case SumPair
 	case XV
+	case Normal
 }
 
 class Game: ObservableObject {
@@ -41,6 +42,14 @@ class Game: ObservableObject {
 
 	func handleInput(input: Int) {
 		board.setCellValues(points: selected, value: input)
+		board.clearFailed()
+		for constraint in constraints {
+			let failed = constraint.valid(board: board.cells)
+			if failed.count > 0 {
+				print(constraint.name)
+			}
+			failed.forEach { board.cells[$0]?.fails.formUnion(constraint.tags) }
+		}
 	}
 
 	func handleDelete() {
@@ -72,6 +81,14 @@ class Board: ObservableObject {
 
 	func setCellValues(points: Set<Point>, value: Int) {
 		cells.filter { points.contains($0.key) }.forEach { $0.value.setValue(x: value) }
+	}
+
+	func setFailed(constraint: Constraint, on: Set<Point>) {
+		cells.filter { on.contains($0.key) }.forEach { $0.value.fails.formUnion(constraint.tags) }
+	}
+
+	func clearFailed() {
+		cells.forEach { $0.value.fails = [] }
 	}
 
 	func getCell(at: Point) -> Cell {
@@ -135,6 +152,7 @@ class Cell: ObservableObject {
 	let region: Int
 	@Published var value: Int?
 	var given: Int?
+	@Published var fails: Set<Tag> = []
 
 	init(point: Point, region: Int, value: Int? = nil, given: Int? = nil) {
 		self.point = point
@@ -143,88 +161,20 @@ class Cell: ObservableObject {
 		self.given = given
 	}
 
+	func displayValidationError() -> Bool {
+		fails.contains(.Normal)
+	}
+
 	func displayValue() -> String {
 		given?.description ?? value?.description ?? ""
 	}
 
+	func effectiveValue() -> Int? {
+		given ?? value
+	}
+
 	func setValue(x: Int) {
 		value = x
-	}
-}
-
-protocol Constraint {
-	var name: String { get set }
-	var group: Set<Point> { get set }
-
-	func valid(board: [Point: Cell]) -> Set<Point>
-}
-
-class ValidDigit: Constraint {
-	var name: String
-	var group: Set<Point> = []
-	let validDigits: Set<Int>
-
-	init(name: String, validDigits: Set<Int>) {
-		self.name = name
-		self.validDigits = validDigits
-		group = []
-	}
-
-	func valid(board: [Point: Cell]) -> Set<Point> {
-		Set(board.filter { $0.value.value != nil && validDigits.contains($0.value.value!) }.map { $0.key })
-	}
-}
-
-class Unique: Constraint {
-	var name: String
-	var group: Set<Point>
-
-	init(name: String, group: Set<Point>) {
-		self.name = name
-		self.group = group
-	}
-
-	func valid(board: [Point: Cell]) -> Set<Point> {
-		var out: Set<Point> = []
-		var found: [Int: Point] = [:]
-		for member in group {
-			if board[member]!.value == nil {
-				continue
-			}
-			let value = board[member]!.value!
-			// if the value has already been seen, add both to the out set and continue
-			if found[value] == nil {
-				found[value] = member
-				continue
-			}
-
-			out.insert(member)
-			out.insert(found[value]!)
-		}
-		return out
-	}
-}
-
-class Sum: Constraint {
-	var name: String
-	var group: Set<Point>
-	var sum: Int
-
-	init(name: String, group: Set<Point>, sum: Int) {
-		self.name = name
-		self.group = group
-		self.sum = sum
-	}
-
-	// the whole region is returned if the sum fails at any point
-	func valid(board: [Point: Cell]) -> Set<Point> {
-		let realSum = group.reduce(into: 0) { partialResult, p in
-			partialResult += board[p]?.value ?? 0
-		}
-		if sum == realSum {
-			return []
-		}
-		return group
 	}
 }
 
@@ -360,104 +310,4 @@ func regionBorders(p: Point, region: Set<Point>, width: CGFloat = 4) -> [RegionB
 		out[3].width = 0
 	}
 	return out
-}
-
-protocol ConstraintGenerator: Hashable {
-	var tags: Set<Tag> { get }
-	func rawConstraints() -> [Constraint]
-}
-
-enum XVType {
-	case X
-	case V
-}
-
-struct XVConstraint: ConstraintGenerator {
-	var id: String
-	var group: [Point]
-	var tags: Set<Tag> = [.SumPair, .XV]
-	var type: XVType
-
-	func rawConstraints() -> [Constraint] {
-		[Sum(name: "\(name()) Constraint \(id)", group: Set(group), sum: sumTo())]
-	}
-
-	func sumTo() -> Int {
-		switch type {
-		case .X: 10
-		case .V: 5
-		}
-	}
-
-	func name() -> String {
-		switch type {
-		case .V: return "V"
-		case .X: return "X"
-		}
-	}
-
-	func leftRight() -> Bool {
-		return group[0].row == group[1].row
-	}
-}
-
-struct KillerCageConstraint: ConstraintGenerator {
-	var id: String
-	var sumTo: Int
-	var group: Set<Point>
-	var tags: Set<Tag> = [.KillerCage, .Unique, .Sum]
-
-	func rawConstraints() -> [Constraint] {
-		[
-			Unique(name: "Killer Cage (\(id)) uniqueness", group: group),
-			Sum(name: "Killer Cage (\(id)) sums to \(sumTo)", group: group, sum: sumTo),
-		]
-	}
-}
-
-struct UniqueRows: ConstraintGenerator {
-	var rows: Int
-	var cols: Int
-	let tags: Set<Tag> = [.Row, .Unique]
-
-	func rawConstraints() -> [Constraint] {
-		(0 ..< rows).map { row in Unique(name: "Unique in row \(row)", group: Set((0 ..< cols).map { col in Point(row: row, col: col) })) }
-	}
-}
-
-struct UniqueColumns: ConstraintGenerator {
-	var rows: Int
-	var cols: Int
-	let tags: Set<Tag> = [.Column, .Unique]
-
-	func rawConstraints() -> [Constraint] {
-		(0 ..< cols).map { col in Unique(name: "Unique in column \(col)", group: Set((0 ..< rows).map { row in Point(row: row, col: col) })) }
-	}
-}
-
-struct UniqueRegions: ConstraintGenerator {
-	var layout: [[String: Int]]
-	var regions: Int
-	let tags: Set<Tag> = [.Region, .Unique]
-
-	func rawConstraints() -> [Constraint] {
-		(0 ..< regions).map { region in
-			Unique(
-				name: "Unique in region \(region)",
-				group: Set(
-					layout.filter { entry in entry["region"]! == region }
-						.map { entry in Point(row: entry["row"]!, col: entry["col"]!) }
-				)
-			)
-		}
-	}
-}
-
-struct ValidDigits: ConstraintGenerator {
-	var validDigits: Set<Int>
-	let tags: Set<Tag> = [.Digits]
-
-	func rawConstraints() -> [Constraint] {
-		[ValidDigit(name: "Valid digits in puzzle", validDigits: validDigits)]
-	}
 }
