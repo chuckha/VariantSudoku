@@ -10,7 +10,7 @@ import SwiftUI
 // - [x] region boundaries
 // - [x] xv
 // - [x] actual gameplay lol
-// - [ ] little killers
+// - [x] little killers
 // - [ ] given digits are black, user entered are blue
 // - [ ] corner marks
 // - [ ] middle marks
@@ -174,11 +174,31 @@ struct SelectedCellsView: View {
 	}
 }
 
+// TODO: make this less fragile.
+struct LittleKillerView: View {
+	var p: Point
+	var lk: LittleKillerConstraint
+
+	var body: some View {
+		GeometryReader { geo in
+			VStack {
+				Text(lk.group[0] == p ? "8" : "")
+					.font(.system(size: 40))
+					.padding(.leading)
+				Image(systemName: "arrow.down.left")
+					.font(.system(size: lk.group[0] == p ? 20 : 0, weight: .bold))
+			}
+			.position(x: geo.size.width + 15, y: -35)
+		}
+	}
+}
+
 struct ConstraintsView: View {
 	var height: Int
 	var width: Int
 	var killerCages: [KillerCageConstraint]
 	var xvs: [XVConstraint]
+	var littleKillers: [LittleKillerConstraint]
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -194,6 +214,9 @@ struct ConstraintsView: View {
 									XVView(xv: xv)
 								}
 							)
+							ForEach(littleKillers, id: \.self) { lk in
+								CellSizeView().overlay(LittleKillerView(p: Point(row, col), lk: lk))
+							}
 						}
 					}
 				}
@@ -241,8 +264,10 @@ struct GameView: View {
 				BoardView(board: game.board)
 				ConstraintsView(height: game.board.height,
 				                width: game.board.width,
-				                killerCages: game.getKillerCages(),
-				                xvs: game.getXVs())
+				                killerCages: game.getBy(ofType: KillerCageConstraint.self, tag: .KillerCage),
+				                xvs: game.getBy(ofType: XVConstraint.self, tag: .XV),
+				                littleKillers: game.getBy(ofType: LittleKillerConstraint.self, tag: .LittleKiller))
+				//                OuterBoardConstraintsView(geo: geo)
 				SelectedCellsView(height: game.board.height,
 				                  width: game.board.width,
 				                  selected: $game.selected)

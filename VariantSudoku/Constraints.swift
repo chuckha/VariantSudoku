@@ -10,6 +10,17 @@ protocol ConstraintGenerator: Hashable {
 	func rawConstraints() -> [Constraint]
 }
 
+struct LittleKillerConstraint: ConstraintGenerator {
+	var id: String
+	var tags: Set<Tag> = [.Sum, .LittleKiller]
+	var group: [Point]
+	var sum: Int
+
+	func rawConstraints() -> [Constraint] {
+		[Sum(name: "Little Killer Constraint \(id)", group: Set(group), tags: tags, sum: sum)]
+	}
+}
+
 enum XVType {
 	case X
 	case V

@@ -46,13 +46,16 @@ func killerCageIntro() -> Game {
 	let killerCageGroup1 = Set([Point(row: 0, col: 0), Point(row: 0, col: 1)])
 	let killerCageGroup2 = Set([Point(row: 1, col: 0), Point(row: 1, col: 1), Point(row: 2, col: 1)])
 	let killerCageGroup3 = Set([Point(row: 1, col: 3), Point(row: 2, col: 3)])
+	let littleKillerCage = [Point(1, 3), Point(2, 2), Point(3, 1)]
 	let constraintGenerators: [any ConstraintGenerator] = [
+		ValidDigits(validDigits: Set(1 ... 4)),
 		UniqueRows(rows: height, cols: width),
 		UniqueColumns(rows: height, cols: width),
 		UniqueRegions(layout: layout, regions: regions),
 		KillerCageConstraint(id: "1", sumTo: 5, group: killerCageGroup1),
 		KillerCageConstraint(id: "2", sumTo: 8, group: killerCageGroup2),
 		KillerCageConstraint(id: "3", sumTo: 4, group: killerCageGroup3),
+		LittleKillerConstraint(id: "1", group: littleKillerCage, sum: 8),
 	]
 	let b = Board(cells: layoutToSudoku(layout), height: height, width: width)
 	return Game(board: b, cgs: constraintGenerators)

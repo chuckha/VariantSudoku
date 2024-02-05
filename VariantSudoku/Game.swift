@@ -14,6 +14,7 @@ enum Tag {
 	case Column
 	case Region
 	case KillerCage
+	case LittleKiller
 	case Digits
 	case SumPair
 	case XV
@@ -32,12 +33,9 @@ class Game: ObservableObject {
 		constraints = cgs.map { $0.rawConstraints() }.flatMap { $0 }
 	}
 
-	func getKillerCages() -> [KillerCageConstraint] {
-		constraintGenerators.filter { $0.tags.contains(.KillerCage) }.map { $0 as! KillerCageConstraint }
-	}
-
-	func getXVs() -> [XVConstraint] {
-		constraintGenerators.filter { $0.tags.contains(.XV) }.map { $0 as! XVConstraint }
+	// getBy(type:) gets a list of constraint generators and returns them as the proper type
+	func getBy<T: ConstraintGenerator>(ofType _: T.Type, tag: Tag) -> [T] {
+		constraintGenerators.filter { $0.tags.contains(tag) }.map { $0 as! T }
 	}
 
 	func handleInput(input: Int) {
