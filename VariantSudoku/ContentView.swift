@@ -16,6 +16,7 @@ import SwiftUI
 // - [ ] middle marks
 // - [ ] mode selection
 // - [x] constraint failure highlights
+// - [x] victory screen
 
 struct ContentView: View {
 	@StateObject private var grid: Game = killerCageIntro()
@@ -33,11 +34,11 @@ struct ContentView: View {
 					//                ControlView(controlMode: $grid.inputMode)
 				}
 			}
-			//        .sheet(isPresented: $grid.victory, onDismiss: {
-			//            grid.reset()
-			//        }, content: {
-			//            Text("you won!")
-			//        })
+			.sheet(isPresented: $grid.victory, onDismiss: {
+				print("nice")
+			}, content: {
+				Text("you won!")
+			})
 			.environmentObject(grid)
 		}
 	}

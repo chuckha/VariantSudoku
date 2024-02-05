@@ -26,6 +26,7 @@ class Game: ObservableObject {
 	var constraintGenerators: [any ConstraintGenerator]
 	private let constraints: [Constraint]
 	@Published var selected: Set<Point> = []
+	@Published var victory: Bool = false
 
 	init(board: Board, cgs: [any ConstraintGenerator]) {
 		self.board = board
@@ -48,6 +49,13 @@ class Game: ObservableObject {
 			}
 			failed.forEach { board.cells[$0]?.fails.formUnion(constraint.tags) }
 		}
+		checkVictory()
+	}
+
+	func checkVictory() {
+		let allFilled = board.cells.reduce(into: true) { $0 = $0 && $1.value.effectiveValue() != nil }
+		let noFailedConstraints = board.cells.reduce(into: 0) { $0 += $1.value.fails.count } == 0
+		victory = allFilled && noFailedConstraints
 	}
 
 	func handleDelete() {
@@ -95,6 +103,10 @@ class Board: ObservableObject {
 		}
 		print("this is really bad")
 		return Cell(point: Point(row: -1, col: -1), region: -1)
+	}
+
+	func reset() {
+		cells.forEach { $0.value.clear() }
 	}
 }
 
@@ -173,6 +185,11 @@ class Cell: ObservableObject {
 
 	func setValue(x: Int) {
 		value = x
+	}
+
+	func clear() {
+		value = nil
+		fails = []
 	}
 }
 
