@@ -11,7 +11,7 @@ import SwiftUI
 // - [x] xv
 // - [x] actual gameplay lol
 // - [x] little killers
-// - [ ] given digits are black, user entered are blue
+// - [x] given digits are black, user entered are blue
 // - [ ] corner marks
 // - [ ] middle marks
 // - [ ] mode selection
@@ -19,8 +19,8 @@ import SwiftUI
 // - [x] victory screen
 
 struct ContentView: View {
-	@StateObject private var grid: Game = killerCageIntro()
-//	@StateObject private var grid: Game = xvIntro()
+//	@StateObject private var grid: Game = killerCageIntro()
+	@StateObject private var grid: Game = xvIntro()
 
 	var body: some View {
 		GeometryReader { geo in
@@ -30,7 +30,7 @@ struct ContentView: View {
 				HStack {
 					//                OptionsView()
 					//                    .padding([.trailing])
-					InputView().frame(height: geo.size.height * 0.3)
+					InputView().frame(height: geo.size.height * 0.4)
 					//                ControlView(controlMode: $grid.inputMode)
 				}
 			}
@@ -113,6 +113,7 @@ struct DisplayView: View {
 			.overlay(
 				GeometryReader { geo in
 					Text(cell.displayValue())
+						.foregroundStyle(cell.color())
 						.font(.system(size: fontSizeFrom(size: geo.size)))
 						.frame(maxWidth: .infinity, maxHeight: .infinity)
 				}
@@ -121,7 +122,7 @@ struct DisplayView: View {
 }
 
 func fontSizeFrom(size: CGSize) -> CGFloat {
-	return size.height - 10
+	return size.height - 14
 }
 
 struct XVView: View {
@@ -182,10 +183,10 @@ struct LittleKillerView: View {
 
 	var body: some View {
 		GeometryReader { geo in
-			VStack {
+			VStack(spacing: -7) {
 				Text(lk.group[0] == p ? "8" : "")
 					.font(.system(size: 40))
-					.padding(.leading)
+					.padding(.leading, 25)
 				Image(systemName: "arrow.down.left")
 					.font(.system(size: lk.group[0] == p ? 20 : 0, weight: .bold))
 			}

@@ -171,6 +171,13 @@ class Cell: ObservableObject {
 		self.given = given
 	}
 
+	func color() -> Color {
+		if given != nil {
+			return Color.primary
+		}
+		return Color(red: 0.1, green: 0.1, blue: 1)
+	}
+
 	func displayValidationError() -> Bool {
 		fails.contains(.Normal)
 	}
