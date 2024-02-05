@@ -17,6 +17,7 @@ import SwiftUI
 // - [ ] mode selection
 // - [x] constraint failure highlights
 // - [x] victory screen
+// - [ ] get rid of hard coding sizes i guess
 
 struct ContentView: View {
 //	@StateObject private var grid: Game = killerCageIntro()
@@ -31,7 +32,7 @@ struct ContentView: View {
 					//                OptionsView()
 					//                    .padding([.trailing])
 					InputView().frame(height: geo.size.height * 0.4)
-					//                ControlView(controlMode: $grid.inputMode)
+					ControlView(controlMode: $grid.controlMode)
 				}
 			}
 			.sheet(isPresented: $grid.victory, onDismiss: {
@@ -41,6 +42,39 @@ struct ContentView: View {
 			})
 			.environmentObject(grid)
 		}
+	}
+}
+
+struct ControlView: View {
+	@Binding var controlMode: ControlMode
+
+	var body: some View {
+		VStack {
+			Toggle("", isOn: toggleBinding(for: .BigNumber))
+				.toggleStyle(ControlToggleStyle())
+				.overlay(
+					BigNumber(text: "9")
+				)
+			Toggle("", isOn: toggleBinding(for: .CornerNumber))
+				.toggleStyle(ControlToggleStyle())
+				.overlay(
+					PencilMarks(marks: [1, 2, 3, 4, 5, 6, 7, 8, 9], size: 15)
+				)
+			Toggle("", isOn: toggleBinding(for: .MiddleNumber))
+				.toggleStyle(ControlToggleStyle())
+				.overlay(
+					MiddleMarks(marks: [1, 2, 3, 4], size: 15)
+				)
+			Spacer()
+		}
+		.padding(.leading)
+	}
+
+	func toggleBinding(for mode: ControlMode) -> Binding<Bool> {
+		Binding<Bool>(
+			get: { mode == controlMode },
+			set: { _ in controlMode = mode }
+		)
 	}
 }
 
@@ -101,6 +135,24 @@ struct RegionBorderShape: Shape {
 	}
 }
 
+struct BigNumber: View {
+	let text: String
+	var style: Color = .black
+
+	var body: some View {
+		CellSizeView()
+			.overlay(
+				GeometryReader { geo in
+					Text(text)
+						.lineLimit(1)
+						.foregroundStyle(style)
+						.font(.system(size: fontSizeFrom(size: geo.size)))
+						.frame(maxWidth: .infinity, maxHeight: .infinity)
+				}
+			).frame(alignment: /*@START_MENU_TOKEN@*/ .center/*@END_MENU_TOKEN@*/)
+	}
+}
+
 struct DisplayView: View {
 	@ObservedObject var cell: Cell
 
@@ -109,15 +161,7 @@ struct DisplayView: View {
 	}
 
 	var body: some View {
-		CellSizeView()
-			.overlay(
-				GeometryReader { geo in
-					Text(cell.displayValue())
-						.foregroundStyle(cell.color())
-						.font(.system(size: fontSizeFrom(size: geo.size)))
-						.frame(maxWidth: .infinity, maxHeight: .infinity)
-				}
-			).frame(alignment: /*@START_MENU_TOKEN@*/ .center/*@END_MENU_TOKEN@*/)
+		BigNumber(text: cell.displayValue(), style: cell.color())
 	}
 }
 
@@ -316,9 +360,13 @@ struct InputView: View {
 				})
 				.aspectRatio(1, contentMode: .fit)
 
-				InputButton(label: "DELETE", action: {
+				InputButton(label: "", action: {
 					grid.handleDelete()
 				})
+				.overlay(
+					Image(systemName: "delete.left.fill")
+						.font(.system(size: 50))
+				)
 				.aspectRatio(2.1, contentMode: .fit)
 			}
 		}
@@ -334,9 +382,11 @@ struct InputButton: View {
 			Color.clear
 				.overlay(
 					RoundedRectangle(cornerRadius: 10)
-						.stroke(Color.accentColor)
+						.stroke(Color.primary)
 				)
-				.overlay(Text(label))
+				.overlay(
+					BigNumber(text: label)
+				)
 		}
 	}
 }

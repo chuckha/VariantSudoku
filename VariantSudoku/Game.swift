@@ -27,6 +27,7 @@ class Game: ObservableObject {
 	private let constraints: [Constraint]
 	@Published var selected: Set<Point> = []
 	@Published var victory: Bool = false
+	@Published var controlMode: ControlMode = .BigNumber
 
 	init(board: Board, cgs: [any ConstraintGenerator]) {
 		self.board = board
