@@ -12,16 +12,17 @@ import SwiftUI
 // - [x] actual gameplay lol
 // - [x] little killers
 // - [x] given digits are black, user entered are blue
-// - [ ] corner marks
-// - [ ] middle marks
-// - [ ] mode selection
+// - [x] corner marks
+// - [x] middle marks
+// - [x] mode selection
 // - [x] constraint failure highlights
 // - [x] victory screen
 // - [ ] get rid of hard coding sizes i guess
+// - [ ] make diagonal selecting beter (reduce hit box in corners)
 
 struct ContentView: View {
-//	@StateObject private var grid: Game = killerCageIntro()
-	@StateObject private var grid: Game = xvIntro()
+	@StateObject private var grid: Game = killerCageIntro()
+//	@StateObject private var grid: Game = xvIntro()
 
 	var body: some View {
 		GeometryReader { geo in
@@ -161,7 +162,19 @@ struct DisplayView: View {
 	}
 
 	var body: some View {
-		BigNumber(text: cell.displayValue(), style: cell.color())
+		CellSizeView()
+			.overlay(
+				BigNumber(text: cell.displayValue(), style: cell.color())
+					.opacity(cell.displayValue() == "" ? 0 : 1)
+			)
+			.overlay(
+				MiddleMarks(marks: Array(cell.middleMarks), size: 20)
+					.opacity(cell.displayValue() == "" ? 1 : 0)
+			)
+			.overlay(
+				PencilMarks(marks: Array(cell.cornerMarks), size: 20)
+					.opacity(cell.displayValue() == "" ? 1 : 0)
+			)
 	}
 }
 
@@ -365,7 +378,7 @@ struct InputView: View {
 				})
 				.overlay(
 					Image(systemName: "delete.left.fill")
-						.font(.system(size: 50))
+						.font(.system(size: 50)).allowsHitTesting(/*@START_MENU_TOKEN@*/false/*@END_MENU_TOKEN@*/)
 				)
 				.aspectRatio(2.1, contentMode: .fit)
 			}

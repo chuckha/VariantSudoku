@@ -41,16 +41,28 @@ class Game: ObservableObject {
 	}
 
 	func handleInput(input: Int) {
-		board.setCellValues(points: selected, value: input)
-		board.clearFailed()
-		for constraint in constraints {
-			let failed = constraint.valid(board: board.cells)
-			if failed.count > 0 {
-				print(constraint.name)
-			}
-			failed.forEach { board.cells[$0]?.fails.formUnion(constraint.tags) }
+		switch controlMode {
+		case .BigNumber:
+			handleValue(input: input)
+		case .CornerNumber:
+			handleCorner(input: input)
+		case .MiddleNumber:
+			handleMiddleNumber(input: input)
 		}
+	}
+
+	func handleValue(input: Int) {
+		board.setCellValues(points: selected, value: input)
+		checkConstraints()
 		checkVictory()
+	}
+
+	func handleCorner(input: Int) {
+		board.setCellCornerMark(points: selected, value: input)
+	}
+
+	func handleMiddleNumber(input: Int) {
+		board.setCellMiddleMark(points: selected, value: input)
 	}
 
 	func checkVictory() {
@@ -59,8 +71,46 @@ class Game: ObservableObject {
 		victory = allFilled && noFailedConstraints
 	}
 
+	func checkConstraints() {
+		board.clearFailed()
+		for constraint in constraints {
+			let failed = constraint.valid(board: board.cells)
+			if failed.count > 0 {
+				print(constraint.name)
+			}
+			failed.forEach { board.cells[$0]?.fails.formUnion(constraint.tags) }
+		}
+	}
+
+	/// handleDelete runs some complex logic on the order of what to delete and when.
+	/// First, it will always try to delete the marks in the selected cells for the given control mode
+	/// If it deletes nothing it will try to delete the middle marks, and then the corner marks and then the values.
 	func handleDelete() {
-		print("Delete!")
+		switch controlMode {
+		case .BigNumber:
+			if board.deleteValue(points: selected) {
+				checkConstraints()
+				return
+			}
+		case .CornerNumber:
+			if board.deleteCornerMarks(points: selected) {
+				return
+			}
+		case .MiddleNumber:
+			if board.deleteMiddleMarks(points: selected) {
+				return
+			}
+		}
+		if board.deleteCornerMarks(points: selected) {
+			return
+		}
+		if board.deleteMiddleMarks(points: selected) {
+			return
+		}
+		if board.deleteValue(points: selected) {
+			checkConstraints()
+			return
+		}
 	}
 }
 
@@ -87,7 +137,36 @@ class Board: ObservableObject {
 	}
 
 	func setCellValues(points: Set<Point>, value: Int) {
-		cells.filter { points.contains($0.key) }.forEach { $0.value.setValue(x: value) }
+		cells.filter { points.contains($0.key) }.forEach { $0.value.set(value: value) }
+	}
+
+	func deleteValue(points: Set<Point>) -> Bool {
+		let cellsWithValues = cells.filter { points.contains($0.key) }.filter { $0.value.value != nil }
+		if cellsWithValues.isEmpty { return false }
+		cellsWithValues.forEach { $0.value.clearValue() }
+		return true
+	}
+
+	func setCellCornerMark(points: Set<Point>, value: Int) {
+		cells.filter { points.contains($0.key) }.forEach { $0.value.setCorner(mark: value) }
+	}
+
+	func deleteCornerMarks(points: Set<Point>) -> Bool {
+		let cellsWithCornerMarks = cells.filter { points.contains($0.key) }.filter { $0.value.cornerMarks.count > 0 }
+		if cellsWithCornerMarks.isEmpty { return false }
+		cellsWithCornerMarks.forEach { $0.value.clearCornerMarks() }
+		return true
+	}
+
+	func setCellMiddleMark(points: Set<Point>, value: Int) {
+		cells.filter { points.contains($0.key) }.forEach { $0.value.setMiddle(mark: value) }
+	}
+
+	func deleteMiddleMarks(points: Set<Point>) -> Bool {
+		let cellsWithMiddleMarks = cells.filter { points.contains($0.key) }.filter { $0.value.middleMarks.count > 0 }
+		if cellsWithMiddleMarks.isEmpty { return false }
+		cellsWithMiddleMarks.forEach { $0.value.clearMiddleMarks() }
+		return true
 	}
 
 	func setFailed(constraint: Constraint, on: Set<Point>) {
@@ -164,6 +243,8 @@ class Cell: ObservableObject {
 	@Published var value: Int?
 	var given: Int?
 	@Published var fails: Set<Tag> = []
+	@Published var cornerMarks: Set<Int> = []
+	@Published var middleMarks: Set<Int> = []
 
 	init(point: Point, region: Int, value: Int? = nil, given: Int? = nil) {
 		self.point = point
@@ -191,9 +272,12 @@ class Cell: ObservableObject {
 		given ?? value
 	}
 
-	func setValue(x: Int) {
-		value = x
-	}
+	func set(value: Int) { self.value = value }
+	func clearValue() { value = nil }
+	func setCorner(mark: Int) { cornerMarks.insert(mark) }
+	func clearCornerMarks() { cornerMarks = [] }
+	func setMiddle(mark: Int) { middleMarks.insert(mark) }
+	func clearMiddleMarks() { middleMarks = [] }
 
 	func clear() {
 		value = nil
