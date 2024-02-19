@@ -19,10 +19,12 @@ import SwiftUI
 // - [x] victory screen
 // - [ ] get rid of hard coding sizes i guess
 // - [ ] make diagonal selecting beter (reduce hit box in corners)
+// - [ ] allow pencil mark deletes when tapping on a number that's already in a pencil mark
 
 struct ContentView: View {
-	@StateObject private var grid: Game = killerCageIntro()
+//	@StateObject private var grid: Game = killerCageIntro()
 //	@StateObject private var grid: Game = xvIntro()
+	@StateObject private var grid: Game = kropkiIntro()
 
 	var body: some View {
 		GeometryReader { geo in
@@ -182,6 +184,21 @@ func fontSizeFrom(size: CGSize) -> CGFloat {
 	return size.height - 14
 }
 
+struct DotView: View {
+	var lr: LeftRight
+	var color: Color = .white
+	var body: some View {
+		GeometryReader { geo in
+			Circle()
+				.stroke(.black, lineWidth: 2)
+				.fill(color)
+				.frame(width: geo.size.width / 4)
+				.position(
+					lr.leftRight() ? CGPoint(x: geo.size.width, y: geo.size.height / 2) : CGPoint(x: geo.size.width / 2, y: geo.size.height))
+		}
+	}
+}
+
 struct XVView: View {
 	var xv: XVConstraint
 	var body: some View {
@@ -258,6 +275,8 @@ struct ConstraintsView: View {
 	var killerCages: [KillerCageConstraint]
 	var xvs: [XVConstraint]
 	var littleKillers: [LittleKillerConstraint]
+	var whiteKropki: [WhiteKropkiDot]
+	var blackKropki: [BlackKropkiDot]
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -271,6 +290,16 @@ struct ConstraintsView: View {
 							CellSizeView().overlay(
 								ForEach(xvs.filter { $0.group[0] == Point(row, col) }, id: \.self) { xv in
 									XVView(xv: xv)
+								}
+							)
+							CellSizeView().overlay(
+								ForEach(whiteKropki.filter { $0.group[0] == Point(row, col) }, id: \.self) { w in
+									DotView(lr: w, color: .white)
+								}
+							)
+							CellSizeView().overlay(
+								ForEach(blackKropki.filter { $0.group[0] == Point(row, col) }, id: \.self) { w in
+									DotView(lr: w, color: .black)
 								}
 							)
 							ForEach(littleKillers, id: \.self) { lk in
@@ -325,7 +354,9 @@ struct GameView: View {
 				                width: game.board.width,
 				                killerCages: game.getBy(ofType: KillerCageConstraint.self, tag: .KillerCage),
 				                xvs: game.getBy(ofType: XVConstraint.self, tag: .XV),
-				                littleKillers: game.getBy(ofType: LittleKillerConstraint.self, tag: .LittleKiller))
+				                littleKillers: game.getBy(ofType: LittleKillerConstraint.self, tag: .LittleKiller),
+				                whiteKropki: game.getBy(ofType: WhiteKropkiDot.self, tag: .WhiteKropki),
+				                blackKropki: game.getBy(ofType: BlackKropkiDot.self, tag: .BlackKropki))
 				//                OuterBoardConstraintsView(geo: geo)
 				SelectedCellsView(height: game.board.height,
 				                  width: game.board.width,

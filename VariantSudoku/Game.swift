@@ -19,6 +19,11 @@ enum Tag {
 	case SumPair
 	case XV
 	case Normal
+	case Kropki
+	case WhiteKropki
+	case BlackKropki
+	case Consecutive
+	case TwoToOneRatio
 }
 
 class Game: ObservableObject {

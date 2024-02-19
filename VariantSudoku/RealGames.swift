@@ -5,6 +5,30 @@
 //  Created by chuck ha on 1/28/24.
 //
 
+/// introduction to Kropki Dots: https://sudokupad.app/z58l737mye
+func kropkiIntro() -> Game {
+	let layout: [[String: Int]] = [
+		c(0, 0, 0), c(0, 1, 0), c(0, 2, 1), c(0, 3, 1),
+		c(1, 0, 0), c(1, 1, 0), c(1, 2, 1), c(1, 3, 1),
+		c(2, 0, 2), c(2, 1, 2), c(2, 2, 3), c(2, 3, 3),
+		c(3, 0, 2), c(3, 1, 2), c(3, 2, 3), c(3, 3, 3),
+	]
+	let (height, width, regions) = dims(layout)
+	let constraintGenerators: [any ConstraintGenerator] = [
+		ValidDigits(validDigits: Set(1 ... 4)),
+		UniqueRows(rows: height, cols: width),
+		UniqueColumns(rows: height, cols: width),
+		UniqueRegions(layout: layout, regions: regions),
+		WhiteKropkiDot(id: "1", group: [Point(0, 1), Point(1, 1)]),
+		WhiteKropkiDot(id: "2", group: [Point(2, 1), Point(2, 2)]),
+		WhiteKropkiDot(id: "3", group: [Point(3, 2), Point(3, 3)]),
+		BlackKropkiDot(id: "1", group: [Point(1, 2), Point(1, 3)]),
+		BlackKropkiDot(id: "2", group: [Point(2, 0), Point(3, 0)]),
+	]
+	let b = Board(cells: layoutToSudoku(layout), height: height, width: width)
+	return Game(board: b, cgs: constraintGenerators)
+}
+
 /// intro to XV: https://sudokupad.app/vzzyz8knam
 func xvIntro() -> Game {
 	let layout: [[String: Int]] = [

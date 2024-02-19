@@ -10,6 +10,38 @@ protocol ConstraintGenerator: Hashable {
 	func rawConstraints() -> [Constraint]
 }
 
+protocol LeftRight {
+	func leftRight() -> Bool
+}
+
+struct WhiteKropkiDot: ConstraintGenerator, LeftRight {
+	var id: String
+	var group: [Point]
+	var tags: Set<Tag> = [.Kropki, .WhiteKropki, .Consecutive]
+
+	func rawConstraints() -> [Constraint] {
+		[Consecutive(name: "White Kropki Dot \(id)", group: Set(group), tags: tags)]
+	}
+
+	func leftRight() -> Bool {
+		return group[0].row == group[1].row
+	}
+}
+
+struct BlackKropkiDot: ConstraintGenerator, LeftRight {
+	var id: String
+	var group: [Point]
+	var tags: Set<Tag> = [.Kropki, .BlackKropki, .TwoToOneRatio]
+
+	func rawConstraints() -> [Constraint] {
+		[Ratio(name: "Black Kropki Dot \(id)", group: Set(group), ratio: 2, tags: tags)]
+	}
+
+	func leftRight() -> Bool {
+		return group[0].row == group[1].row
+	}
+}
+
 struct LittleKillerConstraint: ConstraintGenerator {
 	var id: String
 	var tags: Set<Tag> = [.Sum, .LittleKiller]
@@ -26,7 +58,7 @@ enum XVType {
 	case V
 }
 
-struct XVConstraint: ConstraintGenerator {
+struct XVConstraint: ConstraintGenerator, LeftRight {
 	var id: String
 	var group: [Point]
 	var tags: Set<Tag> = [.SumPair, .XV]
@@ -198,6 +230,67 @@ class Sum: Constraint {
 			partialResult += board[p]?.effectiveValue() ?? 0
 		}
 		if sum == realSum {
+			return []
+		}
+		return group
+	}
+}
+
+class Consecutive: Constraint {
+	var name: String
+	var group: Set<Point>
+	var tags: Set<Tag>
+
+	init(name: String, group: Set<Point>, tags: Set<Tag> = []) {
+		self.name = name
+		self.group = group
+		self.tags = tags
+	}
+
+	func valid(board: [Point: Cell]) -> Set<Point> {
+		// This code deactivates the constraint until the entire region is full
+		if group.filter({ board[$0]?.effectiveValue() == nil }).count != 0 {
+			return []
+		}
+		let vals = Array(Set(group.map { board[$0]!.effectiveValue()! })).sorted()
+		if vals.count != group.count {
+			return group
+		}
+		print("vals", vals)
+		for i in 0 ..< vals.count {
+			if vals[i] - vals[0] != i {
+				return group
+			}
+		}
+		return []
+	}
+}
+
+class Ratio: Constraint {
+	var name: String
+	var group: Set<Point>
+	var ratio: Float
+	var tags: Set<Tag>
+
+	init(name: String, group: Set<Point>, ratio: Float, tags: Set<Tag> = []) {
+		self.name = name
+		self.group = group
+		self.ratio = ratio
+		self.tags = tags
+	}
+
+	func valid(board: [Point: Cell]) -> Set<Point> {
+		// This code deactivates the constraint until the entire region is full
+		if group.filter({ board[$0]?.effectiveValue() == nil }).count != 0 {
+			return []
+		}
+		let vals = group.map { board[$0]!.effectiveValue() }
+		let a = Float(vals[0]!)
+		let b = Float(vals[1]!)
+		if a == 0 || b == 0 {
+			return group
+		}
+		if a / b == ratio || b / a == ratio {
 			return []
 		}
 		return group
