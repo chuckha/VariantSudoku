@@ -153,7 +153,14 @@ class Board: ObservableObject {
 	}
 
 	func setCellCornerMark(points: Set<Point>, value: Int) {
-		cells.filter { points.contains($0.key) }.forEach { $0.value.setCorner(mark: value) }
+		let filtered = cells.filter { points.contains($0.key) }
+		let withVal = filtered.filter { $0.value.cornerMarks.contains(value) }
+		// if all the cells have the mark, remove it instead of setting it
+		if withVal.count == points.count {
+			filtered.forEach { $0.value.removeCorner(mark: value) }
+			return
+		}
+		filtered.forEach { $0.value.setCorner(mark: value) }
 	}
 
 	func deleteCornerMarks(points: Set<Point>) -> Bool {
@@ -164,7 +171,14 @@ class Board: ObservableObject {
 	}
 
 	func setCellMiddleMark(points: Set<Point>, value: Int) {
-		cells.filter { points.contains($0.key) }.forEach { $0.value.setMiddle(mark: value) }
+		let filtered = cells.filter { points.contains($0.key) }
+		let withVal = filtered.filter { $0.value.middleMarks.contains(value) }
+		// if all the cells have the mark, remove it instead of setting it
+		if withVal.count == points.count {
+			filtered.forEach { $0.value.removeMiddle(mark: value) }
+			return
+		}
+		filtered.forEach { $0.value.setMiddle(mark: value) }
 	}
 
 	func deleteMiddleMarks(points: Set<Point>) -> Bool {
@@ -280,8 +294,10 @@ class Cell: ObservableObject {
 	func set(value: Int) { self.value = value }
 	func clearValue() { value = nil }
 	func setCorner(mark: Int) { cornerMarks.insert(mark) }
+	func removeCorner(mark: Int) { cornerMarks.remove(mark) }
 	func clearCornerMarks() { cornerMarks = [] }
 	func setMiddle(mark: Int) { middleMarks.insert(mark) }
+	func removeMiddle(mark: Int) { middleMarks.remove(mark) }
 	func clearMiddleMarks() { middleMarks = [] }
 
 	func clear() {

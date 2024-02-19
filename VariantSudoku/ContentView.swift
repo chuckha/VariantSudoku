@@ -19,7 +19,7 @@ import SwiftUI
 // - [x] victory screen
 // - [ ] get rid of hard coding sizes i guess
 // - [ ] make diagonal selecting beter (reduce hit box in corners)
-// - [ ] allow pencil mark deletes when tapping on a number that's already in a pencil mark
+// - [x] allow pencil mark deletes when tapping on a number that's already in a pencil mark
 
 struct ContentView: View {
 //	@StateObject private var grid: Game = killerCageIntro()
