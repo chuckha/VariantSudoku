@@ -20,6 +20,8 @@ import SwiftUI
 // - [ ] get rid of hard coding sizes i guess
 // - [ ] make diagonal selecting beter (reduce hit box in corners)
 // - [x] allow pencil mark deletes when tapping on a number that's already in a pencil mark
+// - [ ] paste a link from ctc or fpuzzle and play it here
+//
 
 struct ContentView: View {
 //	@StateObject private var grid: Game = killerCageIntro()
